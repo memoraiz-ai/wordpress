@@ -1,4 +1,4 @@
-# MemorAIz WordPress Frames
+# MemorAIz WordPress
 
 ## Overview
 
