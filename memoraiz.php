@@ -118,7 +118,31 @@ class MemoraizPlugin {
       }
 
       openssl_free_key($private_key);
-      return $data . '.' . $this->base64_url_encode($signature);
+
+      // Convert the DER-encoded signature to raw R and S format
+      $der = $signature;
+      $len = strlen($der);
+      $r = '';
+      $s = '';
+
+      // Extract R and S from the DER-encoded signature
+      $rStart = 4;
+      $rLength = ord($der[$rStart - 1]);
+      $r = substr($der, $rStart, $rLength);
+
+      $sStart = $rStart + $rLength + 2;
+      $sLength = ord($der[$sStart - 1]);
+      $s = substr($der, $sStart, $sLength);
+
+      // Ensure R and S are 32 bytes long (pad with leading zeros if necessary)
+      $r = str_pad($r, 32, "\0", STR_PAD_LEFT);
+      $s = str_pad($s, 32, "\0", STR_PAD_LEFT);
+
+      // Concatenate R and S
+      $rawSignature = $r . $s;
+
+      // Combine the JWT parts
+      return $data . '.' . $this->base64_url_encode($rawSignature);
     } catch (Exception $e) {
       error_log('JWT generation error: ' . $e->getMessage());
       return null;
